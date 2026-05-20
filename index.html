@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amalia AI</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: #2E3B34; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; color: #EAEAEA; }
+        h1 { font-weight: 300; font-size: 3.5rem; letter-spacing: -1px; margin-bottom: 2rem; color: #D1E0D7; text-align: center; }
+        .chat-container { background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px; width: 100%; max-width: 600px; padding: 24px; display: flex; flex-direction: column; gap: 16px; backdrop-filter: blur(10px); }
+        .output-box { min-height: 120px; max-height: 300px; overflow-y: auto; font-size: 1rem; line-height: 1.6; color: #E0E6E2; padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.15); word-wrap: break-word; }
+        .input-group { display: flex; gap: 8px; }
+        textarea { flex: 1; background: rgba(255, 255, 255, 0.9); border: none; border-radius: 14px; padding: 14px; font-size: 1rem; color: #1E2522; resize: none; height: 50px; outline: none; }
+        button { background-color: #4A6356; border: none; border-radius: 14px; padding: 0 24px; color: white; font-weight: 600; cursor: pointer; transition: background 0.2s; font-size: 0.95rem; }
+        button:hover { background-color: #5C7A6A; }
+        button:disabled { background-color: #3A4740; cursor: not-allowed; }
+        .loading { color: #A4BCAE; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <h1>Amalia</h1>
+
+    <div class="chat-container">
+        <div class="output-box" id="output">Ask Amalia anything...</div>
+        <div class="input-group">
+            <textarea id="userInput" placeholder="Type your message..."></textarea>
+            <button id="sendBtn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const inputEl = document.getElementById('userInput');
+            const outputEl = document.getElementById('output');
+            const btnEl = document.getElementById('sendBtn');
+            const prompt = inputEl.value.trim();
+            
+            if (!prompt) return;
+
+            // UI adjustments for loading state
+            inputEl.value = '';
+            outputEl.innerHTML = '<span class="loading">Amalia is thinking...</span>';
+            btnEl.disabled = true;
+
+            try {
+                // We send the request to our secure Vercel backend route, NOT Google directly
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    outputEl.textContent = data.text;
+                } else {
+                    outputEl.textContent = "Error: " + (data.error || "Something went wrong.");
+                }
+            } catch (err) {
+                outputEl.textContent = "Could not connect to the network.";
+            } finally {
+                btnEl.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
